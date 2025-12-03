@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Instalando...');
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Cacheando app shell');
@@ -39,16 +40,14 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Estrategia: Stale-While-Revalidate para recursos, Network-First para API
+// Estrategias de caché
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Si es una llamada a la API, intentamos red primero, si falla, el catch lo maneja el Context
+  // 1. Estrategia para API: Network First (Red primero, si falla usa caché/error)
   if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => {
-        // Si falla la red en una API, retornamos un error 503 o null
-        // para que el frontend (Context) use su localStorage
         return new Response(JSON.stringify({ error: 'offline' }), {
             headers: { 'Content-Type': 'application/json' }
         });
@@ -57,10 +56,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para archivos estáticos (JS, CSS, HTML), Cache First
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+  // 2. Estrategia para Archivos Estáticos: Stale-While-Revalidate o Cache First con Dynamic Caching
+  // Aquí usamos "Cache First, falling back to Network" pero GUARDANDO en caché lo nuevo.
+ event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      // Si ya lo tenemos, lo devolvemos
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // Si no, lo pedimos a internet
+      return fetch(event.request).then((networkResponse) => {
+        // Verificamos que la respuesta sea válida (Status 200)
+        // Quitamos la restricción estricta de 'basic' para permitir fuentes externas (CORS)
+        if (!networkResponse || networkResponse.status !== 200) {
+          return networkResponse;
+        }
+
+        // Guardamos copia en caché
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return networkResponse;
+      }).catch(() => {
+        // Aquí podrías retornar una imagen placeholder si falla la red y no hay caché
+        console.log("Fallo al recuperar recurso:", event.request.url);
+      });
     })
   );
 });

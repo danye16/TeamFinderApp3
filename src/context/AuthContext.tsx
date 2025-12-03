@@ -1,15 +1,18 @@
 // src/context/AuthContext.tsx
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import type { User, LoginDto, UsuarioCreacionDto } from '../types'; // <-- Usamos los DTOs
-import { login, register } from '../services/apiService'; // <-- Importamos las funciones correctas
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import type { ReactNode } from 'react';
+import type { User, LoginDto, UsuarioCreacionDto } from '../types';
+
+// 1. IMPORTANTE: Renombramos aquí para evitar el conflicto con tu función local 'login'
+import { login as loginService, register as registerService } from '../services/apiService'; 
 
 interface AuthContextType {
   user: User | null;
   isAuthLoading: boolean;
-  login: (userData: { user: User; token: string }) => void; // Para el login de la app nativa
+  login: (userData: { user: User; token: string }) => void; // Función local
   logout: () => void;
-  handleLogin: (loginData: LoginDto) => Promise<{ success: boolean; error?: string }>; // Para el login del modal
-  handleRegister: (registerData: UsuarioCreacionDto) => Promise<{ success: boolean; error?: string }>; // Para el registro
+  handleLogin: (loginData: LoginDto) => Promise<{ success: boolean; error?: string }>;
+  handleRegister: (registerData: UsuarioCreacionDto) => Promise<{ success: boolean; error?: string }>;
   handleDiscordLogin: () => void;
 }
 
@@ -25,15 +28,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (token) {
-      // Aquí deberías tener un endpoint para validar el token y obtener los datos del usuario
-      // Por ahora, si hay token, asumimos que el usuario es válido
-      // setUser({ id: 1, username: 'UsuarioGuardado', ... });
-    }
+    // Como tu API no valida tokens, si existe en localStorage asumimos que hay sesión.
+    // (Idealmente aquí validarías contra un endpoint /Me, pero tu API no lo tiene aún)
     setIsAuthLoading(false);
   }, []);
 
-  // Esta función es para cuando la app nativa (React Native) pasa las credenciales
+  // --- FUNCIÓN LOCAL: Actualiza el estado de React y guarda en localStorage ---
   const login = (userData: { user: User; token: string }) => {
     localStorage.setItem('authToken', userData.token);
     setUser(userData.user);
@@ -44,32 +44,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
-  // Esta función es para el login desde el modal de la PWA
+  // --- HANDLE LOGIN: Conecta el Formulario -> API -> Estado Local ---
   const handleLogin = async (loginData: LoginDto) => {
     try {
-      const user = await login(loginData); // Llama a la API de login
-      // IMPORTANTE: Tu API de login no devuelve un token. Esto es un problema de seguridad.
-      // Lo manejaremos así por ahora, pero deberías pedir a tu backend que devuelva un token.
-      login({ user, token: 'fake-token-sin-backend' });
+      // 1. Llamamos a la API (usando el nombre renombrado)
+      const userFromApi = await loginService(loginData); 
+      
+      // 2. Como tu API no devuelve token, generamos uno falso para que la app crea que hay sesión
+      const fakeToken = 'token-simulado-' + userFromApi.id;
+
+      // 3. Guardamos en el estado local
+      login({ user: userFromApi, token: fakeToken }); 
+      
       return { success: true };
     } catch (error) {
+      console.error("Error en login:", error);
       return { success: false, error: 'Usuario o contraseña incorrectos.' };
     }
   };
 
-  // Esta función es para el registro desde el modal de la PWA
+  // --- HANDLE REGISTER: Conecta el Formulario -> API -> Estado Local ---
   const handleRegister = async (registerData: UsuarioCreacionDto) => {
     try {
-      const newUser = await register(registerData); // Llama a la API de registro
-      login({ user: newUser, token: 'fake-token-sin-backend' });
+      // 1. Llamamos a la API (usando el nombre renombrado)
+      const newUser = await registerService(registerData); 
+      
+      // 2. Generamos el token falso
+      const fakeToken = 'token-simulado-' + newUser.id;
+
+      // 3. Iniciamos sesión automáticamente tras el registro
+      login({ user: newUser, token: fakeToken });
+      
       return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Error al registrar. El usuario ya podría existir.' };
+
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      // Devolvemos el mensaje de error real para mostrarlo en el modal
+      return { success: false, error: error.message || 'Error al conectar con el servidor.' };
     }
   };
   
   const handleDiscordLogin = () => {
-    // Por ahora, no implementamos el login con Discord
     console.log('Login con Discord no implementado aún.');
   };
 
