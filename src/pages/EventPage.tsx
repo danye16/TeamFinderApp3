@@ -12,16 +12,16 @@ import InfoCards from '../components/InfoCards';
 import CtaButton from '../components/CtaButton';
 import ParticipantsSection from '../components/ParticipantsSection';
 import RulesSection from '../components/RulesSection';
-import AuthModal from '../components/AuthModal'; // El modal de Login/Register
+import AuthModal from '../components/AuthModal';
 import JoinEventModal from '../components/JoinEventModal';
-import MockLogin from '../components/MockLogin'; // Para desarrollo
+// --- ELIMINAMOS ESTA LÍNEA ---
+// import MockLogin from '../components/MockLogin'; // Ya no es necesario
 
 const EventPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user, login } = useAuth();
   const { addNotification } = useNotification();
   
-  // --- OBTENEMOS TODA LA LÓGICA DEL EVENTO DESDE EL CONTEXTO ---
   const { 
     event, 
     participants, 
@@ -29,18 +29,15 @@ const EventPage: React.FC = () => {
     error, 
     isOffline,
     loadEventData, 
-    handleJoinEvent,      // <-- Función para unirse (viene del contexto)
-    handleLeaveEvent,     // <-- Función para abandonar (viene del contexto)
+    handleJoinEvent,      
+    handleLeaveEvent,     
   } = useEvent();
 
-  // --- CALCULAMOS SI EL USUARIO ESTÁ UNIDO AQUÍ ---
   const isUserJoined = user && participants.some(p => p.usuarioId === user.id);
 
-  // --- ESTADOS PARA CONTROLAR LOS MODALES ---
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
   const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
 
-  // --- EFECTOS PARA CARGAR DATOS Y ESCUCHAR MENSAJES DE LA APP NATIVA ---
   useEffect(() => {
     if (eventId) {
       loadEventData(eventId);
@@ -60,7 +57,6 @@ const EventPage: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [login]);
 
-  // --- LÓGICA DE UI (COMPARTIR Y MODALES) ---
   const handleShare = async () => {
     if (!event) return;
     const shareData = {
@@ -80,19 +76,25 @@ const EventPage: React.FC = () => {
     }
   };
 
-  // --- LÓGICA PARA UNIRSE AL EVENTO ---
   const handleJoinClick = useCallback(() => {
     if (!user) {
+      // Si no hay usuario, abrimos el modal de login/registro
       setIsAuthModalVisible(true);
       return;
     }
+    // Si ya hay usuario, abrimos el modal para unirse
     setIsJoinModalVisible(true);
   }, [user]);
 
-  // --- LÓGICA PARA CUANDO EL USUARIO SE CONFIRMA EN EL MODAL DE UNIRSE ---
   const handleConfirmJoin = useCallback(async (nickEnEvento: string, rolElegido: string) => {
     setIsJoinModalVisible(false);
+    // Nos aseguramos que el usuario exista antes de llamar a la API
+    if (!user) {
+        addNotification('Error: No se encontró la sesión del usuario.', 'error');
+        return;
+    }
     try {
+      // Pasamos el objeto `user` completo, tu `EventContext` ya sabe cómo usar el `user.id`
       await handleJoinEvent(user, nickEnEvento, rolElegido);
       addNotification('¡Te has unido al evento con éxito!', 'success');
     } catch (err) {
@@ -100,7 +102,6 @@ const EventPage: React.FC = () => {
     }
   }, [user, handleJoinEvent, addNotification]);
 
-  // --- LÓGICA PARA ABANDONAR EL EVENTO ---
   const handleLeaveClick = useCallback(async () => {
     if (!user) return;
     try {
@@ -111,13 +112,12 @@ const EventPage: React.FC = () => {
     }
   }, [user, handleLeaveEvent, addNotification]);
 
-  // --- LÓGICA PARA EL LOGIN EXITOSO ---
   const handleLoginSuccess = useCallback(() => {
     setIsAuthModalVisible(false);
-    setIsJoinModalVisible(true); // Mostramos el modal para unirse
+    // Después de un login exitoso, mostramos el modal para unirse al evento
+    setIsJoinModalVisible(true);
   }, []);
 
-  // --- RENDERIZADO CONDICIONAL ---
   if (loading) {
     return <div className="container"><h2>CARGANDO EVENTO...</h2></div>;
   }
@@ -140,8 +140,6 @@ const EventPage: React.FC = () => {
 
   return (
     <div className="container">
-      <MockLogin />
- {/* 3. AVISO DE MODO OFFLINE (NO BLOQUEANTE) */}
       {isOffline && (
         <div style={{
             background: '#ffcc00', 
@@ -174,8 +172,9 @@ const EventPage: React.FC = () => {
       )}
 
       <ParticipantsSection participants={participants} />
-      <RulesSection />
+      <RulesSection descripcion={event.descripcion} />
 
+      {/* --- MODALES --- */}
       <AuthModal 
         isVisible={isAuthModalVisible}
         onClose={() => setIsAuthModalVisible(false)}

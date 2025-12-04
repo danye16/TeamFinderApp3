@@ -35,9 +35,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isVisible, onClose, onLoginSucces
         username: formData.get('username') as string,
         contraseña: formData.get('password') as string,
         pais: formData.get('pais') as string,
-        edad: parseInt(formData.get('edad') as string, 10),
-        estiloJuego: formData.get('estiloJuego') as string,
-        steamId: formData.get('steamId') as string,
+        edad: 18,
+        estiloJuego: "Balanceado",
+        steamId: "",
         correo: formData.get('correo') as string,
         avatarUrl: formData.get('avatarUrl') as string,
       };
@@ -76,14 +76,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isVisible, onClose, onLoginSucces
                 <label htmlFor="pais">PAÍS</label>
                 <input type="text" id="pais" name="pais" required />
               </div>
-              <div className="form-group">
+          {/*     <div className="form-group">
                 <label htmlFor="edad">EDAD</label>
                 <input type="number" id="edad" name="edad" required />
               </div>
               <div className="form-group">
                 <label htmlFor="estiloJuego">ESTILO DE JUEGO</label>
                 <input type="text" id="estiloJuego" name="estiloJuego" required />
-              </div>
+              </div> */}
               {/* Opcional: steamId, correo, avatarUrl */}
             </>
           )}

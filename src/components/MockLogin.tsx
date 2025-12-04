@@ -1,4 +1,4 @@
-// src/components/MockLogin.tsx
+/* // src/components/MockLogin.tsx
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import type { User } from '../types'; // <-- Importar el tipo User
@@ -52,4 +52,4 @@ const MockLogin: React.FC = () => {
   );
 };
 
-export default MockLogin;
+export default MockLogin; */

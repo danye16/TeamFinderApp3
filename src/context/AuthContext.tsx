@@ -30,17 +30,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const token = localStorage.getItem('authToken');
     // Como tu API no valida tokens, si existe en localStorage asumimos que hay sesión.
     // (Idealmente aquí validarías contra un endpoint /Me, pero tu API no lo tiene aún)
+    const storedUser = localStorage.getItem('authUser');
+    if (token && storedUser) {
+      // Si hay token y usuario, los usamos para restaurar la sesión
+      setUser(JSON.parse(storedUser));
+    }
+    
     setIsAuthLoading(false);
   }, []);
 
   // --- FUNCIÓN LOCAL: Actualiza el estado de React y guarda en localStorage ---
-  const login = (userData: { user: User; token: string }) => {
+ const login = (userData: { user: User; token: string }) => {
     localStorage.setItem('authToken', userData.token);
+    localStorage.setItem('authUser', JSON.stringify(userData.user)); // <-- Guardamos el usuario
     setUser(userData.user);
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser'); // <-- Limpiamos también el usuario
     setUser(null);
   };
 

@@ -1,8 +1,15 @@
-// src/components/RulesSection.tsx
+// VERSIÓN TEMPORAL PARA DEBUGGEO
 import React, { useState } from 'react';
 
-const RulesSection: React.FC = () => {
+interface RulesSectionProps {
+  descripcion: string;
+}
+
+const RulesSection: React.FC<RulesSectionProps> = ({ descripcion }) => {
   const [isVisible, setIsVisible] = useState(false);
+
+  // --- AÑADE ESTA LÍNEA PARA VER QUÉ ESTÁ RECIBIENDO ---
+  console.log("RulesSection recibió esta descripción:", descripcion);
 
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
@@ -16,9 +23,7 @@ const RulesSection: React.FC = () => {
       </button>
       {isVisible && (
         <div className="rules-content">
-          <p><strong>Formato:</strong> Eliminación directa, Best of 3.</p>
-          <p><strong>Requisitos:</strong> Rango Oro o superior.</p>
-          <p><strong>Reglas:</strong> Prohibido el uso de bugs o glitches. Cualquier falta de respeto será sancionada.</p>
+          <p>{descripcion}</p>
         </div>
       )}
     </section>

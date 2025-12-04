@@ -73,7 +73,7 @@ const CreateEventPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) {
-      setMessage('Debes estar logueado para crear un evento.');
+      setMessage('Debes iniciar sesión para crear un evento.');
       return;
     }
 
@@ -105,6 +105,7 @@ const CreateEventPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+;
 
   return (
     <div className="container">
@@ -126,7 +127,7 @@ const CreateEventPage: React.FC = () => {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="descripcion">DESCRIPCIÓN</label>
+          <label htmlFor="descripcion">Reglas</label>
           <textarea 
             id="descripcion" 
             name="descripcion" 
