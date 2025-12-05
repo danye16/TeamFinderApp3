@@ -8,7 +8,9 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/vite.svg' 
+  '/vite.svg',
+  '/icon192.png',
+  '/icon512.png',
   // Nota: Si tus JS/CSS tienen nombres dinámicos (ej: main.2342.js), 
   // el SW manual es difícil. Recomiendo usar 'vite-plugin-pwa'.
   // Pero si estás probando en dev o tienes nombres fijos, añade aquí tus rutas.
