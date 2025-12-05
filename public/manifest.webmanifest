@@ -2,7 +2,7 @@
   "name": "TeamFinder - Eventos Gaming",
   "short_name": "TeamFinder",
   "description": "Descubre y únete a eventos de gaming en TeamFinder. ¡Forma tu equipo y compite la victoria!",
-  "start_url": "/", 
+  "start_url": "/evento/4", 
   "display": "standalone",
   "background_color": "#0C0C0C",
   "theme_color": "#FF3131",

@@ -1,6 +1,6 @@
 // src/App.tsx
-import React, { useState } from 'react'; // <-- Importamos useState para manejar el modal
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'; // <--- CORRECCIÓN 1: Agregamos useEffect
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'; // <--- CORRECCIÓN 2: Agregamos useNavigate
 
 // --- PROVIDERS ---
 import { AuthProvider, useAuth } from './context/AuthContext'; 
@@ -12,20 +12,17 @@ import EventPage from './pages/EventPage';
 import CreateEventPage from './pages/CreateEventPage';
 
 // --- COMPONENTES ---
-import AuthModal from './components/RegistrationModal'; // <-- Importamos el modal de login/registro
+import AuthModal from './components/RegistrationModal'; 
 import NotificationSystem from './components/NotificationSystem';
 
 // --- ESTILOS ---
 import './index.css';
 
-// --- PÁGINA PRINCIPAL (MODIFICADA) ---
+// --- PÁGINA PRINCIPAL ---
 const HomePage: React.FC = () => {
-  // Usamos el hook de autenticación para saber si el usuario está logueado
   const { user, logout } = useAuth(); 
-  // Estado para controlar la visibilidad del modal
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
 
-  // Función para cerrar el modal después de un login/registro exitoso
   const handleLoginSuccess = () => {
     setIsAuthModalVisible(false);
   };
@@ -34,15 +31,12 @@ const HomePage: React.FC = () => {
     <div>
       <h1>TeamFinder Events</h1>
       
-      {/* LÓGICA DE AUTENTICACIÓN */}
       {user ? (
-        // Si el usuario está logueado, mostramos su info y un botón de logout
         <div style={{ padding: '10px', background: 'var(--bg-card)', margin: '10px', border: '2px solid var(--accent-yellow)', textAlign: 'center' }}>
           <p>¡Bienvenido de nuevo, <strong>{user.username}</strong>!</p>
           <button onClick={logout} className="cta-button join" style={{ fontSize: '0.8em', padding: '5px 10px' }}>CERRAR SESIÓN</button>
         </div>
       ) : (
-        // Si no está logueado, mostramos un botón para abrir el modal de autenticación
         <div style={{ textAlign: 'center', margin: '20px' }}>
           <button 
             onClick={() => setIsAuthModalVisible(true)} 
@@ -55,7 +49,6 @@ const HomePage: React.FC = () => {
 
       <p>Usa un enlace para unirte a un evento o <a href="/crear-evento">crea un nuevo evento</a>.</p>
 
-      {/* RENDERIZADO CONDICIONAL DEL MODAL */}
       <AuthModal 
         isVisible={isAuthModalVisible} 
         onClose={() => setIsAuthModalVisible(false)} 
@@ -65,12 +58,37 @@ const HomePage: React.FC = () => {
   );
 };
 
+// --- COMPONENTE REDIRECTOR ---
+const PWARedirect: React.FC = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // 1. Detectar si es PWA (Modo instalado)
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                  (window.navigator as any).standalone === true;
+
+    // 2. Verificar si ya estamos en el evento 4
+    const isAlreadyThere = window.location.pathname.includes('/evento/4');
+
+    // 3. Lógica: Si soy App y NO estoy en el evento 4 -> Mandame para allá.
+    if (isPWA && !isAlreadyThere) {
+      console.log("🚨 PWA Detectada en ruta incorrecta. Redirigiendo al Evento 4...");
+      navigate('/evento/4', { replace: true });
+    }
+  }, [navigate]);
+
+  return null;
+};
+
 // --- COMPONENTE PRINCIPAL DE LA APP ---
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <Router>
+          {/* CORRECCIÓN 3: ¡Aquí colocamos el redirector! */}
+          <PWARedirect /> 
+          
           <Routes>
             <Route 
               path="/evento/:eventId" 
