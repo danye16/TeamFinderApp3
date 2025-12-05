@@ -154,7 +154,11 @@ const EventPage: React.FC = () => {
         </div>
       )}
       <Header onShare={handleShare} />
-      <Hero title={event.titulo} status="ABIERTO" />
+      <Hero 
+        title={event.titulo} 
+        status="ABIERTO" 
+        backgroundImage={event.imagenUrl} 
+      />
       <InfoCards cardsData={infoCardsData} />
       
       <CtaButton 
