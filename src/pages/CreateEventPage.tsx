@@ -8,6 +8,10 @@ import { createEvent } from '../services/apiService';
 import type { Event } from '../types';
 import Header from '../components/Header';
 
+// --- AÑADE ESTAS DOS LÍNEAS ---
+import Select from 'react-select';
+import { popularGames, type GameOption } from '../data/popularGames';
+
 interface FormData {
   titulo: string;
   descripcion: string;
@@ -24,7 +28,7 @@ const CreateEventPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     titulo: '',
     descripcion: '',
-    juegoId: 1,
+    juegoId: popularGames[0].value,
     fechaInicio: '',
     fechaFin: '',
     maxParticipantes: 10,
@@ -105,7 +109,6 @@ const CreateEventPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-;
 
   return (
     <div className="container">
@@ -114,7 +117,6 @@ const CreateEventPage: React.FC = () => {
       
       <h1 style={{ fontFamily: 'var(--font-header)', color: 'var(--accent-yellow)' }}>CREAR NUEVO EVENTO</h1>
       <form onSubmit={handleSubmit} className="event-creation-form">
-        {/* ... (todo el formulario se queda igual) ... */}
         <div className="form-group">
           <label htmlFor="titulo">TÍTULO DEL EVENTO</label>
           <input 
@@ -126,6 +128,32 @@ const CreateEventPage: React.FC = () => {
             required 
           />
         </div>
+
+        {/* --- CAMPO DE JUEGO AÑADIDO AQUÍ --- */}
+        <div className="form-group">
+          <label htmlFor="juego">JUEGO</label>
+          <Select
+            id="juego"
+            options={popularGames} // <-- Usa la nueva lista
+            value={popularGames.find(game => game.value === formData.juegoId)}
+            onChange={(selectedOption: GameOption | null) => {
+              setFormData(prev => ({
+                ...prev,
+                juegoId: selectedOption ? selectedOption.value : popularGames[0].value,
+              }));
+            }}
+            placeholder="Selecciona un juego..."
+            isClearable={false}
+            styles={{
+              control: (baseStyles) => ({ ...baseStyles, backgroundColor: 'var(--bg-card)', borderColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }),
+              menu: (baseStyles) => ({ ...baseStyles, backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }),
+              option: (baseStyles, state) => ({ ...baseStyles, backgroundColor: state.isFocused ? 'var(--bg-secondary)' : 'var(--bg-card)', color: 'var(--text-primary)' }),
+              singleValue: (baseStyles) => ({ ...baseStyles, color: 'var(--text-primary)' }),
+              input: (baseStyles) => ({ ...baseStyles, color: 'var(--text-primary)' }),
+            }}
+          />
+        </div>
+
         <div className="form-group">
           <label htmlFor="descripcion">Reglas</label>
           <textarea 
